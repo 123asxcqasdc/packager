@@ -222,8 +222,10 @@
       "developer_comment": "Warning that appears when using custom username and cloud variables at the same time."
     },
     "closeWhenStopped": {
-      "string": "Close window when project stops",
-      "developer_comment": "Option to close the window containing the packaged project when all the scripts within a project have stopped running."
+      "string": "Close window when project stops"
+    },
+    "showLoadingProgressInTitle": {
+      "string": "Show loading progress in page title"
     },
     "autoplay": {
       "string": "Start project automatically"

@@ -1450,7 +1450,9 @@ cd "$(dirname "$0")"
     const setProgress = (progress) => {
       if (loadingInner) {
         loadingInner.style.width = progress * 100 + '%';
-        try { document.title = Math.round(progress * 100) + '%'; } catch (e) {}
+        if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
+          try { document.title = Math.round(progress * 100) + '%'; } catch (e) {}
+        }
       }
     };
     const interpolate = (a, b, t) => a + t * (b - a);
@@ -1784,6 +1786,7 @@ Packager.DEFAULT_OPTIONS = () => ({
   autoplay: true,
   username: 'player####',
   closeWhenStopped: false,
+  showLoadingProgressInTitle: true,
   projectId: '',
   custom: {
     css: '',

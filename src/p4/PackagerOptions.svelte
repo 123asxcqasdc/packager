@@ -351,7 +351,8 @@
       'stageWidth',
       'stageHeight',
       'resizeMode',
-      'username'
+      'username',
+      'showLoadingProgressInTitle'
     ]);
   }}
 >
@@ -428,6 +429,10 @@
     <label class="option">
       <input type="checkbox" bind:checked={$options.closeWhenStopped}>
       {$_('options.closeWhenStopped')}
+    </label>
+    <label class="option">
+      <input type="checkbox" bind:checked={$options.showLoadingProgressInTitle}>
+      {$_('options.showLoadingProgressInTitle')}
     </label>
 
     <h3>{$_('options.stage')}</h3>
