@@ -7,37 +7,16 @@ const allMessages = {
   en: () => englishMessages,
   // Generated code:
   /*===*/
-  "ca": () => require("./ca.json"),
-  "cs": () => require("./cs.json"),
-  "de": () => require("./de.json"),
-  "es": () => require("./es.json"),
-  "fi": () => require("./fi.json"),
-  "fr": () => require("./fr.json"),
-  "hu": () => require("./hu.json"),
-  "it": () => require("./it.json"),
-  "ja": () => require("./ja.json"),
-  "ko": () => require("./ko.json"),
-  "lt": () => require("./lt.json"),
-  "nb": () => require("./nb.json"),
-  "nl": () => require("./nl.json"),
-  "pl": () => require("./pl.json"),
-  "pt": () => require("./pt.json"),
-  "pt-br": () => require("./pt-br.json"),
   "ru": () => require("./ru.json"),
-  "sl": () => require("./sl.json"),
-  "sv": () => require("./sv.json"),
-  "tr": () => require("./tr.json"),
-  "uk": () => require("./uk.json"),
-  "zh-cn": () => require("./zh-cn.json"),
-  "zh-tw": () => require("./zh-tw.json"),
   /*===*/
 };
 
-const KNOWN_GOOD_LANGUAGES = ['en', 'es', 'ja', 'nl', 'it', 'sl'];
-const getInitialLocale = () => [
-  navigator.language.toLowerCase(),
-  navigator.language.toLowerCase().split('-')[0]
-].find(i => KNOWN_GOOD_LANGUAGES.includes(i) && allMessages[i]) || 'en';
+const KNOWN_GOOD_LANGUAGES = ['en', 'ru'];
+const getInitialLocale = () => {
+  const lang = navigator.language.toLowerCase();
+  if (lang.startsWith('ru')) return 'ru';
+  return 'en';
+};
 
 const locale = writablePersistentStore('P4.locale', getInitialLocale());
 locale.subscribe((lang) => {

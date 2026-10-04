@@ -1773,7 +1773,7 @@ Packager.DEFAULT_OPTIONS = () => ({
   stageWidth: 480,
   stageHeight: 360,
   resizeMode: 'preserve-ratio',
-  autoplay: false,
+  autoplay: true,
   username: 'player####',
   closeWhenStopped: false,
   projectId: '',
@@ -1794,10 +1794,10 @@ Packager.DEFAULT_OPTIONS = () => ({
   },
   controls: {
     greenFlag: {
-      enabled: false,
+      enabled: true,
     },
     stopAll: {
-      enabled: false,
+      enabled: true,
     },
     fullscreen: {
       enabled: false

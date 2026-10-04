@@ -226,7 +226,7 @@
       "developer_comment": "Option to close the window containing the packaged project when all the scripts within a project have stopped running."
     },
     "autoplay": {
-      "string": "Start project automatically instead of showing a big green flag"
+      "string": "Start project automatically"
     },
     "autoplayHint": {
       "string": "Note: Many browsers will not allow websites to automatically play sound, so sounds might not play until the user interacts with the project."
