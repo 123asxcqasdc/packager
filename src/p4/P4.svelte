@@ -53,8 +53,8 @@
 <style>
   :root {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background: white;
-    color: black;
+    background: #1b3b1b;
+    color: #f0f7da;
   }
   :global([theme="dark"]) {
     background: #111;
@@ -79,8 +79,8 @@
   :global(input[type="number"]),
   :global(textarea),
   :global(.is-not-safari select) {
-    background-color: white;
-    color: black;
+    background-color: #1b331b;
+    color: #f0f7da;
     border: 1px solid rgb(160, 160, 160);
     border-radius: 2px;
   }
@@ -92,7 +92,7 @@
   :global([theme="dark"] textarea),
   :global([theme="dark"] .is-not-safari select) {
     background-color: #333;
-    color: white;
+    color: #f0f7da;
     border-color: #888;
   }
   :global([theme="dark"] .is-not-safari select:hover) {
