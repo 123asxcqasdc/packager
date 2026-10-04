@@ -177,7 +177,6 @@
   </Section>
 
   {#if !isStandalone}
-    <News />
   {/if}
 
   {#if isSupported}
@@ -217,32 +216,11 @@
   {/if}
 
   <footer>
-    <div>
-      {#if PRIVACY_POLICY && !isStandalone}
-        <a href={PRIVACY_POLICY}>{$_('p4.privacy')}</a>
-        <span> - </span>
-      {/if}
-      <a href={FEEDBACK_PRIMARY.link}>{$_('p4.feedback')}</a>
-      {#if SOURCE_CODE}
-        <span> - </span>
-        <a href={SOURCE_CODE}>{$_('p4.sourceCode')}</a>
-      {/if}
-      {#if DONATE}
-        <!-- Donation link needs to be wrapped in another element so we can hide it in the Mac App Store -->
-        <span class="donate-link">
-          <span> - </span>
-          <a href={DONATE}>{$_('p4.donate')}</a>
-        </span>
-      {/if}
+    <div style="margin-bottom: 0.8rem; color: #a2c78d; font-size: 1.2rem; opacity: 0.8;">
+      <span>🐌</span> <span>🐌💚</span> <span>🐌</span> <span>🐚</span> <span>🐌</span> <span>🍀🐌</span>
     </div>
-    <div>
-      <a href="https://docs.turbowarp.org/packager">{$_('p4.documentation')}</a>
-    </div>
-    <div>
-      <SelectTheme />
-    </div>
-    <div>
-      <SelectLocale />
+    <div style="color: #a2c78d; font-size: 0.9rem; margin-top: 0.5rem;">
+      © Ули 2025–2026
     </div>
   </footer>
 </main>
