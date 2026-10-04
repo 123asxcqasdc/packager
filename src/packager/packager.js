@@ -1318,15 +1318,20 @@ cd "$(dirname "$0")"
         : ''}
     }
     .progress-bar-outer {
-      border: 1px solid currentColor;
+      width: 100%;
       height: 10px;
-      width: 200px;
+      background: #1b331b;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.5rem 0;
       max-width: 200px;
     }
     .progress-bar-inner {
       height: 100%;
       width: 0;
-      background-color: currentColor;
+      background: linear-gradient(90deg, #7eaf7a, #c7f0b1);
+      border-radius: 10px;
+      transition: width 0.3s ease;
     }
     .loading-text, noscript {
       font-weight: normal;
