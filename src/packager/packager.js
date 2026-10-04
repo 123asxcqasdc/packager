@@ -1794,10 +1794,10 @@ Packager.DEFAULT_OPTIONS = () => ({
   },
   controls: {
     greenFlag: {
-      enabled: true,
+      enabled: false,
     },
     stopAll: {
-      enabled: true,
+      enabled: false,
     },
     fullscreen: {
       enabled: false
@@ -1812,7 +1812,7 @@ Packager.DEFAULT_OPTIONS = () => ({
     listColor: '#fc662c'
   },
   compiler: {
-    enabled: true,
+    enabled: false,
     warpTimer: false
   },
   packagedRuntime: true,

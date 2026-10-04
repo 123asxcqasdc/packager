@@ -1,6 +1,6 @@
 # Uli Packager
 
-https://packager.uli.tw/
+https://ulip.c6t.ru/
 
 Converts Scratch projects into HTML files, zip archives, or executable programs for Windows, macOS, and Linux.
 
