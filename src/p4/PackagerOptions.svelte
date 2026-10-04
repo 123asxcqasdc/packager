@@ -41,6 +41,8 @@
   defaultOptions.app.windowTitle = Packager.getWindowTitleFromFileName(projectData.title);
   defaultOptions.autoplay = true;
   defaultOptions.compiler.enabled = true;
+  defaultOptions.controls.greenFlag.enabled = false;
+  defaultOptions.controls.stopAll.enabled = false;
   defaultOptions.extensions = projectData.project.analysis.extensions;
   const options = writablePersistentStore(`PackagerOptions.${projectData.uniqueId}`, defaultOptions);
 
