@@ -1786,7 +1786,7 @@ Packager.DEFAULT_OPTIONS = () => ({
   autoplay: true,
   username: 'player####',
   closeWhenStopped: false,
-  showLoadingProgressInTitle: true,
+  showLoadingProgressInTitle: false,
   projectId: '',
   custom: {
     css: '',
@@ -1823,7 +1823,7 @@ Packager.DEFAULT_OPTIONS = () => ({
     listColor: '#fc662c'
   },
   compiler: {
-    enabled: false,
+    enabled: true,
     warpTimer: false
   },
   packagedRuntime: true,
