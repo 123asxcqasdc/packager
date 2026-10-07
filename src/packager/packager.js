@@ -1450,9 +1450,9 @@ cd "$(dirname "$0")"
     const setProgress = (progress) => {
       if (loadingInner) {
         loadingInner.style.width = progress * 100 + '%';
-        if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
-          try { document.title = Math.round(progress * 100) + '%'; } catch (e) {}
-        }
+      }
+      if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
+        try { document.title = Math.round(progress * 100) + '%'; } catch (e) {}
       }
     };
     const interpolate = (a, b, t) => a + t * (b - a);
@@ -1676,6 +1676,9 @@ cd "$(dirname "$0")"
       await scaffolding.loadProject(projectData);
       setProgress(1);
       loadingScreen.hidden = true;
+      if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
+        try { document.title = ${JSON.stringify(this.options.app.windowTitle)}; } catch (e) {}
+      }
       if (${this.options.autoplay}) {
         scaffolding.start();
       } else {

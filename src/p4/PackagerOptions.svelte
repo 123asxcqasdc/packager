@@ -351,8 +351,7 @@
       'stageWidth',
       'stageHeight',
       'resizeMode',
-      'username',
-      'showLoadingProgressInTitle'
+      'username'
     ]);
   }}
 >
@@ -430,10 +429,6 @@
       <input type="checkbox" bind:checked={$options.closeWhenStopped}>
       {$_('options.closeWhenStopped')}
     </label>
-    <label class="option">
-      <input type="checkbox" bind:checked={$options.showLoadingProgressInTitle}>
-      {$_('options.showLoadingProgressInTitle')}
-    </label>
 
     <h3>{$_('options.stage')}</h3>
     <label class="option">
@@ -469,6 +464,7 @@
     resetOptions([
       'app.windowTitle',
       'loadingScreen',
+      'showLoadingProgressInTitle',
       'autoplay',
       'controls',
       'appearance',
@@ -492,6 +488,10 @@
     <label class="option">
       <input type="checkbox" bind:checked={$options.loadingScreen.progressBar}>
       {$_('options.showProgressBar')}
+    </label>
+    <label class="option">
+      <input type="checkbox" bind:checked={$options.showLoadingProgressInTitle}>
+      {$_('options.showLoadingProgressInTitle')}
     </label>
     <label class="option">
       {$_('options.loadingScreenText')}
