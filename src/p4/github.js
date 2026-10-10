@@ -50,8 +50,11 @@ export const startDeviceFlow = async () => {
   return await res.json();
 };
 
-export const pollForToken = async (deviceCode, interval = 5) => {
-  const poll = async () => {
+export const pollForToken = async (deviceCode, interval = 5, expiresIn = 900) => {
+  const deadline = Date.now() + expiresIn * 1000;
+  let wait = interval;
+  while (Date.now() < deadline) {
+    await new Promise(r => setTimeout(r, wait * 1000));
     const res = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
@@ -66,16 +69,16 @@ export const pollForToken = async (deviceCode, interval = 5) => {
       storeToken(data.access_token);
       return data.access_token;
     }
-    if (data.error === 'authorization_pending') return null;
+    if (data.error === 'authorization_pending') continue;
     if (data.error === 'slow_down') {
-      await new Promise(r => setTimeout(r, (interval + 5) * 1000));
-      return poll();
+      wait += 5;
+      continue;
     }
     if (data.error === 'expired_token') throw new Error('Device code expired');
     if (data.error === 'access_denied') throw new Error('Access denied');
     throw new Error(data.error_description || data.error || 'Unknown error');
-  };
-  return poll();
+  }
+  throw new Error('Device code expired');
 };
 
 const api = async (token, path, init = {}) => {

@@ -62,6 +62,8 @@
       </p>
     {/if}
   </div>
+</Section>
+
 <GitHubExport
   uniqueId={uniqueId}
   projectName={projectName}

@@ -53,7 +53,7 @@
       userCode = flow.user_code;
       verificationUri = flow.verification_uri;
       polling = true;
-      await pollForToken(deviceCode, flow.interval || 5);
+      await pollForToken(deviceCode, flow.interval || 5, flow.expires_in || 900);
       polling = false;
       deviceCode = null;
       token = getStoredToken();
