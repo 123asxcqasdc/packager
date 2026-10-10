@@ -1113,6 +1113,9 @@
     name={result ? result.filename : null}
     url={result ? result.url : null}
     blob={result ? result.blob : null}
+    uniqueId={projectData.uniqueId}
+    projectName={projectData.title}
+    targetType={$options.target}
   />
 {:else if !$progress.visible}
   <Section caption>

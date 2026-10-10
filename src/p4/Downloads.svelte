@@ -4,21 +4,19 @@
   import {getJSZip} from '../packager/packager';
   import downloadURL from './download-url';
   import {isChromeOS} from './environment';
+  import GitHubExport from './GitHubExport.svelte';
 
   export let name;
   export let url;
   export let blob;
+  export let uniqueId;
+  export let projectName;
+  export let targetType;
 
   let workaroundInProgress;
 
   const useAlternativeDownloadToBypassChromeOSBugs = async () => {
-    // We've had a lot of bug reports about people on Chrome OS devices not being able to download
-    // HTML files but being able to download zip files just fine. We're pretty sure that's not our
-    // fault so we have to work around it (I want to blame whatever surveillance extensions
-    // they're being forced to install).
-
     workaroundInProgress = true;
-
     try {
       const JSZip = await getJSZip();
       const zip = new JSZip();
@@ -28,14 +26,12 @@
         compression: 'DEFLATE'
       });
       const newFileName = name.replace(/\.html$/, '.zip');
-  
       const blobURL = URL.createObjectURL(zippedBlob);
       downloadURL(newFileName, blobURL);
       URL.revokeObjectURL(blobURL);
     } catch (e) {
       console.error(e);
     }
-
     workaroundInProgress = false;
   };
 </script>
@@ -66,4 +62,10 @@
       </p>
     {/if}
   </div>
-</Section>
+<GitHubExport
+  uniqueId={uniqueId}
+  projectName={projectName}
+  filename={name}
+  blob={blob}
+  targetType={targetType}
+/>
