@@ -186,7 +186,6 @@
     const task = new Task();
     result = await task.do(runPackager(task, deepClone($options)));
     task.done();
-    downloadURL(result.filename, result.url);
   };
 
   const preview = async () => {
