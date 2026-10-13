@@ -160,7 +160,7 @@
     {/if}
   {:else}
     <div>
-      <p>Вошёл как: <strong>{user?.login || ''}</strong> <button on:click={logout}>Выйти</button></p>
+      <p>Вошёл как: <strong>{user && user.login || ''}</strong> <button on:click={logout}>Выйти</button></p>
       <label>
         Репозиторий:
         <select bind:value={selectedRepo} disabled={loadingRepos}>
