@@ -36,11 +36,8 @@
   let error = '';
   let selectedRepo = '';
   let path = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
-  let uploading = false;
-  let uploaded = false;
-  let usePat = false;
-  let pat = '';
-  let showPatHelp = false;
+  let uploadProgress = 0;
+  let uploadMsg = '';
 
   const loginWithPat = async () => {
     error = '';
@@ -92,6 +89,8 @@
     uploading = true;
     uploaded = false;
     pagesUrl = '';
+    uploadProgress = 0;
+    uploadMsg = 'Подготовка...';
     try {
       if (!selectedRepo) throw new Error('Select repo');
       const [owner, repo] = selectedRepo.split('/');
@@ -101,6 +100,8 @@
       const normalizedPath = basePath ? basePath + '/' : '';
 
       if (targetType === 'html') {
+        uploadMsg = 'Кодирую HTML...';
+        uploadProgress = 10;
         const reader = new FileReader();
         const dataUrl = await new Promise((resolve, reject) => {
           reader.onload = () => resolve(reader.result);
@@ -108,35 +109,52 @@
           reader.readAsDataURL(blob);
         });
         const base64 = dataUrl.split(',')[1];
+        uploadMsg = 'Проверяю существующий файл...';
+        uploadProgress = 40;
         const sha = await getFileSha(token, owner, repo, normalizedPath + 'index.html');
+        uploadMsg = 'Загружаю index.html...';
+        uploadProgress = 70;
         await putFile(token, owner, repo, normalizedPath + 'index.html', base64, `Publish ${filename} to GitHub Pages`, sha);
+        uploadProgress = 90;
       } else {
         const JSZip = await getJSZip();
+        uploadMsg = 'Распаковываю ZIP...';
+        uploadProgress = 10;
         const zip = await JSZip.loadAsync(blob);
         const entries = Object.keys(zip.files).filter(f => !zip.files[f].dir);
-        for (const entry of entries) {
+        const total = entries.length;
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          uploadMsg = `Загружаю ${entry} (${i+1}/${total})...`;
           const content = await zip.file(entry).async('uint8array');
           let binary = '';
           const bytes = new Uint8Array(content);
           const chunkSize = 0x8000;
-          for (let i = 0; i < bytes.length; i += chunkSize) {
-            const chunk = bytes.subarray(i, i + chunkSize);
+          for (let i2 = 0; i2 < bytes.length; i2 += chunkSize) {
+            const chunk = bytes.subarray(i2, i2 + chunkSize);
             binary += String.fromCharCode.apply(null, chunk);
           }
           const base64 = btoa(binary);
           const filePath = normalizedPath + entry.replace(/^\/+/, '');
           const sha = await getFileSha(token, owner, repo, filePath);
           await putFile(token, owner, repo, filePath, base64, `Publish ${filename} to GitHub Pages`, sha);
+          uploadProgress = 10 + Math.round(((i + 1) / total) * 70);
         }
       }
+      uploadMsg = 'Включаю GitHub Pages...';
+      uploadProgress = 95;
       await ensureGhPages(token, owner, repo);
       storeMapping(uniqueId, { owner, repo, path: p, branch: 'gh-pages', baseUrl: getPagesUrl(owner, repo, p) });
       pagesUrl = getPagesUrl(owner, repo, p);
+      uploadMsg = 'Готово';
+      uploadProgress = 100;
       uploaded = true;
     } catch (e) {
       error = e.message || 'Upload failed';
     }
     uploading = false;
+    uploadMsg = '';
+    uploadProgress = 0;
   };
 
   if (token && !user) loadUser();
@@ -180,8 +198,11 @@
       </label>
       <p>Будет залито: <code>{path ? path + '/' : ''}{filename}</code></p>
       <Button on:click={doExport} disabled={uploading || !selectedRepo} text={uploading ? 'Заливаю...' : 'Залить на GitHub Pages'} />
-      {#if uploaded && pagesUrl}
-        <p>Готово. Ссылка: <a href={pagesUrl} target="_blank" rel="noopener">{pagesUrl}</a></p>
+      {#if uploading}
+        <p style="margin-top:6px;font-size:0.9em">{uploadMsg} {uploadProgress}%</p>
+        <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;max-width:300px">
+          <div style="height:100%;background:#4c9aff;width:{uploadProgress}%"></div>
+        </div>
       {/if}
     </div>
   {/if}
