@@ -37,30 +37,20 @@
   let path = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
   let uploading = false;
   let uploaded = false;
-  let pagesUrl = '';
+  let usePat = false;
+  let pat = '';
+  let showPatHelp = false;
 
-  const mapping = getMapping(uniqueId);
-  if (mapping) {
-    selectedRepo = `${mapping.owner}/${mapping.repo}`;
-    path = mapping.path || path;
-  }
-
-  const login = async () => {
+  const loginWithPat = async () => {
     error = '';
+    if (!pat.trim()) return;
+    token = pat.trim();
     try {
-      const flow = await startDeviceFlow();
-      deviceCode = flow.device_code;
-      userCode = flow.user_code;
-      verificationUri = flow.verification_uri;
-      polling = true;
-      await pollForToken(deviceCode, flow.interval || 5, flow.expires_in || 900);
-      polling = false;
-      deviceCode = null;
-      token = getStoredToken();
-      await loadUser();
+      user = await getUser(token);
+      await loadRepos();
     } catch (e) {
-      polling = false;
-      error = e.message || 'Login failed';
+      token = null;
+      error = e.message || 'Invalid token';
     }
   };
 
@@ -150,13 +140,27 @@
 <Section>
   <h3>Экспорт в GitHub Pages</h3>
   {#if !token}
-    <p>Войди через GitHub Device Flow чтобы загрузить файлы в репозиторий и опубликовать на GitHub Pages.</p>
-    {#if !deviceCode}
-      <Button on:click={login} text="Войти через GitHub" />
+    <p>Войди через GitHub Device Flow или вставь Personal Access Token (PAT) с правами <code>repo</code>.</p>
+    {#if !deviceCode && !usePat}
+      <div>
+        <Button on:click={login} text="Войти через GitHub (Device Flow)" />
+        <Button on:click={() => { usePat = true; error=''; }} secondary text="Войти по токену PAT" />
+      </div>
+    {:else if usePat}
+      <div>
+        <input type="password" bind:value={pat} placeholder="ghp_..." style="width:260px" />
+        <Button on:click={loginWithPat} text="Войти" />
+        <Button on:click={() => { usePat = false; error=''; }} secondary text="Назад" />
+        <button type="button" on:click={() => showPatHelp = !showPatHelp} style="margin-left:4px">?</button>
+        {#if showPatHelp}
+          <p style="font-size:0.9em">Создай PAT на <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> (Classic) с scope <code>repo</code>.</p>
+        {/if}
+      </div>
     {:else}
       <p>Код устройства: <strong>{userCode}</strong></p>
       <p><a href={verificationUri} target="_blank" rel="noopener">Открыть {verificationUri}</a> и введи код</p>
       <p>{polling ? 'Ожидание авторизации...' : ''}</p>
+      <Button on:click={() => { deviceCode=null; polling=false; error=''; }} secondary text="Назад" />
     {/if}
   {:else}
     <div>
