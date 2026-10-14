@@ -41,6 +41,8 @@
   let usePat = false;
   let pat = '';
   let showPatHelp = false;
+
+  const loginWithPat = async () => {
     error = '';
     if (!pat.trim()) return;
     token = pat.trim();
