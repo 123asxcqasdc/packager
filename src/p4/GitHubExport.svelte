@@ -140,27 +140,21 @@
 <Section>
   <h3>Экспорт в GitHub Pages</h3>
   {#if !token}
-    <p>Войди через GitHub Device Flow или вставь Personal Access Token (PAT) с правами <code>repo</code>.</p>
-    {#if !deviceCode && !usePat}
+    <p>Вставь GitHub Personal Access Token (PAT) с правами <code>repo</code>.</p>
+    {#if !usePat}
       <div>
-        <Button on:click={login} text="Войти через GitHub (Device Flow)" />
-        <Button on:click={() => { usePat = true; error=''; }} secondary text="Войти по токену PAT" />
+        <Button on:click={() => { usePat = true; error=''; }} text="Войти по токену" />
       </div>
-    {:else if usePat}
+    {:else}
       <div>
         <input type="password" bind:value={pat} placeholder="ghp_..." style="width:260px" />
         <Button on:click={loginWithPat} text="Войти" />
-        <Button on:click={() => { usePat = false; error=''; }} secondary text="Назад" />
+        <Button on:click={() => { usePat = false; error=''; }} secondary text="Отмена" />
         <button type="button" on:click={() => showPatHelp = !showPatHelp} style="margin-left:4px">?</button>
         {#if showPatHelp}
-          <p style="font-size:0.9em">Создай PAT на <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> (Classic) с scope <code>repo</code>.</p>
+          <p style="font-size:0.9em">Создай токен на <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">github.com/settings/tokens</a> (Classic), выбери scope <code>repo</code>.</p>
         {/if}
       </div>
-    {:else}
-      <p>Код устройства: <strong>{userCode}</strong></p>
-      <p><a href={verificationUri} target="_blank" rel="noopener">Открыть {verificationUri}</a> и введи код</p>
-      <p>{polling ? 'Ожидание авторизации...' : ''}</p>
-      <Button on:click={() => { deviceCode=null; polling=false; error=''; }} secondary text="Назад" />
     {/if}
   {:else}
     <div>

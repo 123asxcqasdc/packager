@@ -1,25 +1,10 @@
 const CLIENT_ID = 'Ov23liJPmM8L67MMnq4C';
-const TOKEN_KEY = 'ulip.github.token';
-const MAPPING_KEY_PREFIX = 'ulip.github.map.';
-
 export const getStoredToken = () => {
   try {
     return localStorage.getItem(TOKEN_KEY);
   } catch (e) {
     return null;
   }
-};
-
-export const clearToken = () => {
-  try {
-    localStorage.removeItem(TOKEN_KEY);
-  } catch (e) {}
-};
-
-const storeToken = (token) => {
-  try {
-    localStorage.setItem(TOKEN_KEY, token);
-  } catch (e) {}
 };
 
 export const getMapping = (uniqueId) => {
