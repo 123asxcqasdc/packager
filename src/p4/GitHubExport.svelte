@@ -6,6 +6,7 @@
   import {
     getStoredToken,
     clearToken,
+    setStoredToken,
     startDeviceFlow,
     pollForToken,
     getUser,
@@ -45,10 +46,14 @@
     error = '';
     if (!pat.trim()) return;
     token = pat.trim();
+    setStoredToken(token);
     try {
       user = await getUser(token);
       await loadRepos();
+      usePat = false;
+      pat = '';
     } catch (e) {
+      setStoredToken(null);
       token = null;
       error = e.message || 'Invalid token';
     }
