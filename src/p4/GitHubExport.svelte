@@ -40,6 +40,9 @@
   let uploadMsg = '';
   let uploading = false;
   let uploaded = false;
+  let usePat = false;
+  let pat = '';
+  let showPatHelp = false;
 
   const loginWithPat = async () => {
     error = '';
