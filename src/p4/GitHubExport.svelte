@@ -13,6 +13,7 @@
     listRepos,
     getFileSha,
     putFile,
+    ensureBranch,
     ensureGhPages,
     getPagesUrl,
     getMapping,
@@ -25,6 +26,9 @@
   export let blob;
   export let targetType; // 'html' | 'zip'
 
+  const savedMapping = getMapping(uniqueId);
+  const defaultPath = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
+
   let token = getStoredToken();
   let user = null;
   let repos = [];
@@ -34,8 +38,9 @@
   let verificationUri = null;
   let polling = false;
   let error = '';
-  let selectedRepo = '';
-  let path = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
+  let selectedRepo = savedMapping ? `${savedMapping.owner}/${savedMapping.repo}` : '';
+  let path = savedMapping && savedMapping.path != null ? savedMapping.path : defaultPath;
+  let outputName = savedMapping && savedMapping.outputName ? savedMapping.outputName : 'index.html';
   let uploadProgress = 0;
   let uploadMsg = '';
   let uploading = false;
@@ -104,6 +109,11 @@
       const p = path.replace(/^\/+/, '').replace(/\/+$/, '');
       const basePath = p ? p : '';
       const normalizedPath = basePath ? basePath + '/' : '';
+      const outName = (outputName || 'index.html').replace(/^\/+/, '').replace(/\/+$/, '') || 'index.html';
+
+      uploadMsg = 'Проверяю ветку gh-pages...';
+      uploadProgress = 5;
+      await ensureBranch(token, owner, repo, 'gh-pages');
 
       if (targetType === 'html') {
         uploadMsg = 'Кодирую HTML...';
@@ -117,10 +127,10 @@
         const base64 = dataUrl.split(',')[1];
         uploadMsg = 'Проверяю существующий файл...';
         uploadProgress = 40;
-        const sha = await getFileSha(token, owner, repo, normalizedPath + 'index.html');
-        uploadMsg = 'Загружаю index.html...';
+        const sha = await getFileSha(token, owner, repo, normalizedPath + outName);
+        uploadMsg = `Загружаю ${outName}...`;
         uploadProgress = 70;
-        await putFile(token, owner, repo, normalizedPath + 'index.html', base64, `Publish ${filename} to GitHub Pages`, sha);
+        await putFile(token, owner, repo, normalizedPath + outName, base64, `Publish ${filename} to GitHub Pages`, sha);
         uploadProgress = 90;
       } else {
         const JSZip = await getJSZip();
@@ -150,7 +160,7 @@
       uploadMsg = 'Включаю GitHub Pages...';
       uploadProgress = 95;
       await ensureGhPages(token, owner, repo);
-      storeMapping(uniqueId, { owner, repo, path: p, branch: 'gh-pages', baseUrl: getPagesUrl(owner, repo, p) });
+      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: 'gh-pages', baseUrl: getPagesUrl(owner, repo, p) });
       pagesUrl = getPagesUrl(owner, repo, p);
       uploadMsg = 'Готово';
       uploadProgress = 100;
@@ -192,6 +202,9 @@
         Репозиторий:
         <select bind:value={selectedRepo} disabled={loadingRepos}>
           <option value="">— выбрать репозиторий —</option>
+          {#if selectedRepo && !repos.some(r => `${r.owner.login}/${r.name}` === selectedRepo)}
+            <option value={selectedRepo}>{selectedRepo} (сохранённый)</option>
+          {/if}
           {#each repos as r}
             <option value={`${r.owner.login}/${r.name}`}>{r.owner.login}/{r.name}</option>
           {/each}
@@ -202,13 +215,24 @@
         Путь в репо (папка):
         <input type="text" bind:value={path} placeholder="my-project" />
       </label>
-      <p>Будет залито: <code>{path ? path + '/' : ''}{filename}</code></p>
+      <br />
+      {#if targetType === 'html'}
+        <label>
+          Имя файла:
+          <input type="text" bind:value={outputName} placeholder="index.html" />
+        </label>
+        <br />
+      {/if}
+      <p>Будет залито: <code>{path ? path + '/' : ''}{targetType === 'html' ? (outputName || 'index.html') : filename}</code></p>
       <Button on:click={doExport} disabled={uploading || !selectedRepo} text={uploading ? 'Заливаю...' : 'Залить на GitHub Pages'} />
       {#if uploading}
         <p style="margin-top:6px;font-size:0.9em">{uploadMsg} {uploadProgress}%</p>
         <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;max-width:300px">
           <div style="height:100%;background:#4c9aff;width:{uploadProgress}%"></div>
         </div>
+      {/if}
+      {#if uploaded && pagesUrl}
+        <p style="margin-top:6px">Готово: <a href={pagesUrl} target="_blank" rel="noopener">{pagesUrl}</a></p>
       {/if}
     </div>
   {/if}

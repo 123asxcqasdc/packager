@@ -121,11 +121,52 @@ export const getFileSha = async (token, owner, repo, path) => {
   }
 };
 
-export const putFile = async (token, owner, repo, path, contentBase64, message, sha = null) => {
+export const getRepo = async (token, owner, repo) => {
+  const res = await api(token, `/repos/${owner}/${repo}`);
+  if (!res.ok) throw new Error('Failed to get repo info');
+  return res.json();
+};
+
+const getRef = async (token, owner, repo, branch) => {
+  const res = await api(token, `/repos/${owner}/${repo}/git/ref/heads/${branch}`);
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.object ? data.object.sha : null;
+};
+
+export const ensureBranch = async (token, owner, repo, branch = 'gh-pages') => {
+  const existing = await getRef(token, owner, repo, branch);
+  if (existing) return existing;
+  const info = await getRepo(token, owner, repo);
+  const base = info.default_branch || 'main';
+  let baseSha = await getRef(token, owner, repo, base);
+  if (!baseSha) {
+    const commits = await api(token, `/repos/${owner}/${repo}/commits?per_page=1`);
+    if (commits.ok) {
+      const list = await commits.json();
+      if (Array.isArray(list) && list.length) baseSha = list[0].sha;
+    }
+  }
+  if (!baseSha) throw new Error(`Не удалось найти базовый коммит для ветки ${branch}`);
+  const create = await api(token, `/repos/${owner}/${repo}/git/refs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: `refs/heads/${branch}`, sha: baseSha })
+  });
+  if (!create.ok) {
+    const text = await create.text();
+    throw new Error(`Не удалось создать ветку ${branch}: ${create.status} ${text}`);
+  }
+  const created = await create.json();
+  return created.object ? created.object.sha : baseSha;
+};
+
+export const putFile = async (token, owner, repo, path, contentBase64, message, sha = null, branch = 'gh-pages') => {
   const body = {
     message: message || `Update ${path}`,
     content: contentBase64,
-    branch: 'gh-pages'
+    branch
   };
   if (sha) body.sha = sha;
   const res = await api(token, `/repos/${owner}/${repo}/contents/${path}`, {
