@@ -38,8 +38,9 @@
   let path = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
   let uploadProgress = 0;
   let uploadMsg = '';
-
-  const loginWithPat = async () => {
+  let usePat = false;
+  let pat = '';
+  let showPatHelp = false;
     error = '';
     if (!pat.trim()) return;
     token = pat.trim();
