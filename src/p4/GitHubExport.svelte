@@ -15,6 +15,7 @@
     putFile,
     ensureBranch,
     ensureGhPages,
+    getPagesInfo,
     getPagesUrl,
     getMapping,
     storeMapping
@@ -41,6 +42,8 @@
   let selectedRepo = savedMapping ? `${savedMapping.owner}/${savedMapping.repo}` : '';
   let path = savedMapping && savedMapping.path != null ? savedMapping.path : defaultPath;
   let outputName = savedMapping && savedMapping.outputName ? savedMapping.outputName : 'index.html';
+  let branch = savedMapping && savedMapping.branch ? savedMapping.branch : 'main';
+  let customDomain = savedMapping && savedMapping.customDomain ? savedMapping.customDomain : '';
   let uploadProgress = 0;
   let uploadMsg = '';
   let uploading = false;
@@ -95,6 +98,15 @@
     repos = [];
   };
 
+  const onRepoChange = async () => {
+    customDomain = '';
+    if (!selectedRepo || !token) return;
+    const [owner, repo] = selectedRepo.split('/');
+    if (!owner || !repo) return;
+    const info = await getPagesInfo(token, owner, repo);
+    if (info && info.cname) customDomain = info.cname;
+  };
+
   const doExport = async () => {
     error = '';
     uploading = true;
@@ -110,10 +122,11 @@
       const basePath = p ? p : '';
       const normalizedPath = basePath ? basePath + '/' : '';
       const outName = (outputName || 'index.html').replace(/^\/+/, '').replace(/\/+$/, '') || 'index.html';
+      const br = (branch || 'main').trim() || 'main';
 
-      uploadMsg = 'Проверяю ветку gh-pages...';
+      uploadMsg = `Проверяю ветку ${br}...`;
       uploadProgress = 5;
-      await ensureBranch(token, owner, repo, 'gh-pages');
+      await ensureBranch(token, owner, repo, br);
 
       if (targetType === 'html') {
         uploadMsg = 'Кодирую HTML...';
@@ -127,10 +140,10 @@
         const base64 = dataUrl.split(',')[1];
         uploadMsg = 'Проверяю существующий файл...';
         uploadProgress = 40;
-        const sha = await getFileSha(token, owner, repo, normalizedPath + outName);
+        const sha = await getFileSha(token, owner, repo, normalizedPath + outName, br);
         uploadMsg = `Загружаю ${outName}...`;
         uploadProgress = 70;
-        await putFile(token, owner, repo, normalizedPath + outName, base64, `Publish ${filename} to GitHub Pages`, sha);
+        await putFile(token, owner, repo, normalizedPath + outName, base64, `Publish ${filename} to GitHub Pages`, sha, br);
         uploadProgress = 90;
       } else {
         const JSZip = await getJSZip();
@@ -152,16 +165,18 @@
           }
           const base64 = btoa(binary);
           const filePath = normalizedPath + entry.replace(/^\/+/, '');
-          const sha = await getFileSha(token, owner, repo, filePath);
-          await putFile(token, owner, repo, filePath, base64, `Publish ${filename} to GitHub Pages`, sha);
+          const sha = await getFileSha(token, owner, repo, filePath, br);
+          await putFile(token, owner, repo, filePath, base64, `Publish ${filename} to GitHub Pages`, sha, br);
           uploadProgress = 10 + Math.round(((i + 1) / total) * 70);
         }
       }
       uploadMsg = 'Включаю GitHub Pages...';
       uploadProgress = 95;
-      await ensureGhPages(token, owner, repo);
-      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: 'gh-pages', baseUrl: getPagesUrl(owner, repo, p) });
-      pagesUrl = getPagesUrl(owner, repo, p);
+      await ensureGhPages(token, owner, repo, br);
+      const info = await getPagesInfo(token, owner, repo);
+      customDomain = (info && info.cname) ? info.cname : '';
+      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: br, customDomain, baseUrl: getPagesUrl(owner, repo, p, customDomain) });
+      pagesUrl = getPagesUrl(owner, repo, p, customDomain);
       uploadMsg = 'Готово';
       uploadProgress = 100;
       uploaded = true;
@@ -200,7 +215,7 @@
       <p>Вошёл как: <strong>{user && user.login || ''}</strong> <button on:click={logout}>Выйти</button></p>
       <label>
         Репозиторий:
-        <select bind:value={selectedRepo} disabled={loadingRepos}>
+        <select bind:value={selectedRepo} on:change={onRepoChange} disabled={loadingRepos}>
           <option value="">— выбрать репозиторий —</option>
           {#if selectedRepo && !repos.some(r => `${r.owner.login}/${r.name}` === selectedRepo)}
             <option value={selectedRepo}>{selectedRepo} (сохранённый)</option>
@@ -216,6 +231,11 @@
         <input type="text" bind:value={path} placeholder="my-project" />
       </label>
       <br />
+      <label>
+        Ветка:
+        <input type="text" bind:value={branch} placeholder="main" style="width:140px" />
+      </label>
+      <br />
       {#if targetType === 'html'}
         <label>
           Имя файла:
@@ -223,7 +243,10 @@
         </label>
         <br />
       {/if}
-      <p>Будет залито: <code>{path ? path + '/' : ''}{targetType === 'html' ? (outputName || 'index.html') : filename}</code></p>
+      <p>Будет залито: <code>{branch || 'main'}:{path ? path + '/' : ''}{targetType === 'html' ? (outputName || 'index.html') : filename}</code></p>
+      {#if customDomain}
+        <p style="font-size:0.9em">Свой домен: <strong>{customDomain}</strong></p>
+      {/if}
       <Button on:click={doExport} disabled={uploading || !selectedRepo} text={uploading ? 'Заливаю...' : 'Залить на GitHub Pages'} />
       {#if uploading}
         <p style="margin-top:6px;font-size:0.9em">{uploadMsg} {uploadProgress}%</p>

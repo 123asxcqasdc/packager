@@ -108,9 +108,10 @@ export const listRepos = async (token, perPage = 100) => {
   return res.json();
 };
 
-export const getFileSha = async (token, owner, repo, path) => {
+export const getFileSha = async (token, owner, repo, path, ref = '') => {
   try {
-    const res = await api(token, `/repos/${owner}/${repo}/contents/${path}`);
+    const suffix = ref ? `?ref=${encodeURIComponent(ref)}` : '';
+    const res = await api(token, `/repos/${owner}/${repo}/contents/${path}${suffix}`);
     if (res.status === 404) return null;
     if (!res.ok) return null;
     const data = await res.json();
@@ -181,27 +182,50 @@ export const putFile = async (token, owner, repo, path, contentBase64, message, 
   return res.json();
 };
 
-export const ensureGhPages = async (token, owner, repo) => {
+export const ensureGhPages = async (token, owner, repo, branch = 'gh-pages') => {
   try {
     const res = await api(token, `/repos/${owner}/${repo}/pages`);
     if (res.status === 404) {
       const create = await api(token, `/repos/${owner}/${repo}/pages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ source: { branch: 'gh-pages', path: '/' } })
+        body: JSON.stringify({ source: { branch, path: '/' } })
       });
       if (!create.ok) return false;
       return true;
     }
-    if (res.ok) return true;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.source && data.source.branch !== branch) {
+        const update = await api(token, `/repos/${owner}/${repo}/pages`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: { branch, path: '/' } })
+        });
+        return update.ok;
+      }
+      return true;
+    }
     return false;
   } catch (e) {
     return false;
   }
 };
 
-export const getPagesUrl = (owner, repo, subpath = '') => {
+export const getPagesInfo = async (token, owner, repo) => {
+  try {
+    const res = await api(token, `/repos/${owner}/${repo}/pages`);
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+};
+
+export const getPagesUrl = (owner, repo, subpath = '', cname = '') => {
   let p = subpath.replace(/^\/+/, '').replace(/\/+$/, '');
   if (p && !p.endsWith('/')) p = p + '/';
+  const host = (cname || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  if (host) return `https://${host}/${p}`;
   return `https://${owner}.github.io/${repo}/${p}`;
 };
