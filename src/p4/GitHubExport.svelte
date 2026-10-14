@@ -43,6 +43,7 @@
   let usePat = false;
   let pat = '';
   let showPatHelp = false;
+  let pagesUrl = '';
 
   const loginWithPat = async () => {
     error = '';
