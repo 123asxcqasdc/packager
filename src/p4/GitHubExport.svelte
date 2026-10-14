@@ -248,6 +248,7 @@
         <p style="font-size:0.9em">Свой домен: <strong>{customDomain}</strong></p>
       {/if}
       <Button on:click={doExport} disabled={uploading || !selectedRepo} text={uploading ? 'Заливаю...' : 'Залить на GitHub Pages'} />
+      <p style="font-size:0.9em;color:#666">После загрузки сайт обновляется примерно в течение минуты.</p>
       {#if uploading}
         <p style="margin-top:6px;font-size:0.9em">{uploadMsg} {uploadProgress}%</p>
         <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;max-width:300px">
@@ -256,6 +257,7 @@
       {/if}
       {#if uploaded && pagesUrl}
         <p style="margin-top:6px">Готово: <a href={pagesUrl} target="_blank" rel="noopener">{pagesUrl}</a></p>
+        <p style="font-size:0.9em;color:#666">Сайт обновляется примерно в течение минуты после загрузки.</p>
       {/if}
     </div>
   {/if}
