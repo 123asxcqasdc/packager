@@ -511,6 +511,11 @@
         {$_('options.sizeStretch')}
       </label>
     {/if}
+    <label class="option">
+      {$_('options.loadingScreenHTML')}
+      <textarea bind:value={$options.loadingScreen.html} placeholder="<div>Загрузка...</div>" spellcheck="false"></textarea>
+    </label>
+    <p>{$_('options.loadingScreenHTMLHelp')}</p>
 
     <h3>{$_('options.controls')}</h3>
     <div class="group">

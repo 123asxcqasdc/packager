@@ -1414,10 +1414,12 @@ cd "$(dirname "$0")"
   </div>
 
   <div id="loading" class="screen">
-    <noscript>Enable JavaScript</noscript>
+    ${this.options.loadingScreen.html
+      ? this.options.loadingScreen.html
+      : `<noscript>Enable JavaScript</noscript>
     ${this.options.loadingScreen.text ? `<h1 class="loading-text">${escapeXML(this.options.loadingScreen.text)}</h1>` : ''}
     ${this.options.loadingScreen.image && this.options.loadingScreen.imageMode === 'normal' ? `<div class="loading-image"><img src="${await Adapter.readAsURL(this.options.loadingScreen.image, 'loading-screen')}"></div>` : ''}
-    ${this.options.loadingScreen.progressBar ? '<div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>' : ''}
+    ${this.options.loadingScreen.progressBar ? '<div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>' : ''}`}
   </div>
 
   <div id="error" class="screen" hidden>
@@ -1770,7 +1772,8 @@ Packager.usesUnsafeOptions = (options) => {
   const getUnsafeOptions = (options) => [
     options.custom,
     options.extensions,
-    options.cloudVariables.unsafeCloudBehaviors
+    options.cloudVariables.unsafeCloudBehaviors,
+    options.loadingScreen.html
   ];
   return JSON.stringify(getUnsafeOptions(defaultOptions)) !== JSON.stringify(getUnsafeOptions(options));
 };
@@ -1804,7 +1807,8 @@ Packager.DEFAULT_OPTIONS = () => ({
     progressBar: true,
     text: '',
     imageMode: 'normal',
-    image: null
+    image: null,
+    html: ''
   },
   controls: {
     greenFlag: {

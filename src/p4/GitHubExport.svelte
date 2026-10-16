@@ -53,6 +53,19 @@
   let showPatHelp = false;
   let pagesUrl = '';
 
+  $: previewUrl = (() => {
+    if (!selectedRepo) return '';
+    const [owner, repo] = selectedRepo.split('/');
+    if (!owner || !repo) return '';
+    const p = path.replace(/^\/+/, '').replace(/\/+$/, '');
+    let url = getPagesUrl(owner, repo, p, customDomain);
+    if (targetType === 'html') {
+      const out = (outputName || 'index.html').replace(/^\/+/, '').replace(/\/+$/, '');
+      if (out && out !== 'index.html') url += out;
+    }
+    return url;
+  })();
+
   const loginWithPat = async () => {
     error = '';
     if (!pat.trim()) return;
@@ -175,8 +188,10 @@
       await ensureGhPages(token, owner, repo, br);
       const info = await getPagesInfo(token, owner, repo);
       customDomain = (info && info.cname) ? info.cname : '';
-      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: br, customDomain, baseUrl: getPagesUrl(owner, repo, p, customDomain) });
-      pagesUrl = getPagesUrl(owner, repo, p, customDomain);
+      let finalUrl = getPagesUrl(owner, repo, p, customDomain);
+      if (targetType === 'html' && outName && outName !== 'index.html') finalUrl += outName;
+      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: br, customDomain, baseUrl: finalUrl });
+      pagesUrl = finalUrl;
       uploadMsg = 'Готово';
       uploadProgress = 100;
       uploaded = true;
@@ -244,6 +259,9 @@
         <br />
       {/if}
       <p>Будет залито: <code>{branch || 'main'}:{path ? path + '/' : ''}{targetType === 'html' ? (outputName || 'index.html') : filename}</code></p>
+      {#if previewUrl}
+        <p>Ссылка: <a href={previewUrl} target="_blank" rel="noopener">{previewUrl}</a></p>
+      {/if}
       {#if customDomain}
         <p style="font-size:0.9em">Свой домен: <strong>{customDomain}</strong></p>
       {/if}

@@ -227,5 +227,8 @@ export const getPagesUrl = (owner, repo, subpath = '', cname = '') => {
   if (p && !p.endsWith('/')) p = p + '/';
   const host = (cname || '').replace(/^https?:\/\//, '').replace(/\/+$/, '');
   if (host) return `https://${host}/${p}`;
+  if (repo.toLowerCase() === `${owner.toLowerCase()}.github.io`) {
+    return `https://${owner}.github.io/${p}`;
+  }
   return `https://${owner}.github.io/${repo}/${p}`;
 };

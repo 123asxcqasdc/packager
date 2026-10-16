@@ -253,6 +253,12 @@
     "loadingScreenImage": {
       "string": "Loading screen image"
     },
+    "loadingScreenHTML": {
+      "string": "Custom loading screen HTML"
+    },
+    "loadingScreenHTMLHelp": {
+      "string": "Replaces the progress bar, text, and image above with your own HTML. Add an element with id \"loading-inner\" to receive progress updates (its width will be set from 0% to 100%)."
+    },
     "sizeNormal": {
       "string": "Display at normal size"
     },

@@ -81,6 +81,8 @@
         "learnMore": "Узнать больше",
         "listColor": "Цвет списков",
         "loadingScreen": "Экран Загрузки",
+        "loadingScreenHTML": "Свой HTML экрана загрузки",
+        "loadingScreenHTMLHelp": "Заменяет шкалу загрузки, текст и изображение выше собственным HTML. Добавь элемент с id \"loading-inner\", чтобы получать прогресс (его ширина меняется от 0% до 100%).",
         "loadingScreenImage": "Изображение на экране загрузки",
         "loadingScreenText": "Текст на экране загрузки",
         "loadingScreenTextPlaceholder": "(Ничего)",
