@@ -1,0 +1,48 @@
+name: Release standalone
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (created if missing)
+        required: true
+        default: "v3.14.0-uli"
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
+    - name: Install Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: 24
+        cache: npm
+    - name: Install dependencies
+      run: npm ci
+    - name: Test
+      run: npm test
+    - name: Build standalone
+      run: npm run build-standalone-prod
+    - name: Publish release
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        RELEASE_TAG: ${{ inputs.tag }}
+      run: |
+        set -euo pipefail
+        if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+          echo "Release exists — uploading asset"
+          gh release upload "$RELEASE_TAG" dist/standalone.html --clobber
+        else
+          echo "Creating release $RELEASE_TAG"
+          gh release create "$RELEASE_TAG" \
+            --title "Uli Packager standalone" \
+            --notes "Автономная версия пакагера одним файлом (standalone.html)." \
+            dist/standalone.html
+        fi
+        echo "Result: $(gh release view "$RELEASE_TAG" --json url --jq .url)"
