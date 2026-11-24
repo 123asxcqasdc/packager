@@ -38,6 +38,10 @@
   }
   defaultOptions.app.packageName = Packager.getDefaultPackageNameFromFileName(projectData.title);
   defaultOptions.app.windowTitle = Packager.getWindowTitleFromFileName(projectData.title);
+  defaultOptions.autoplay = true;
+  defaultOptions.compiler.enabled = true;
+  defaultOptions.controls.greenFlag.enabled = false;
+  defaultOptions.controls.stopAll.enabled = false;
   const options = writablePersistentStore(`PackagerOptions.${projectData.uniqueId}`, defaultOptions);
 
   // Infinite clones used to be stored as a big number instead of actual `Infinity`.
@@ -173,7 +177,6 @@
     const task = new Task();
     result = await task.do(runPackager(task, deepClone($options)));
     task.done();
-    downloadURL(result.filename, result.url);
   };
 
   const preview = async () => {
@@ -451,6 +454,7 @@
     resetOptions([
       'app.windowTitle',
       'loadingScreen',
+      'showLoadingProgressInTitle',
       'autoplay',
       'controls',
       'appearance',
@@ -476,6 +480,10 @@
       {$_('options.showProgressBar')}
     </label>
     <label class="option">
+      <input type="checkbox" bind:checked={$options.showLoadingProgressInTitle}>
+      {$_('options.showLoadingProgressInTitle')}
+    </label>
+    <label class="option">
       {$_('options.loadingScreenText')}
       <input type="text" bind:value={$options.loadingScreen.text} placeholder={$_('options.loadingScreenTextPlaceholder')}>
     </label>
@@ -494,6 +502,11 @@
         {$_('options.sizeStretch')}
       </label>
     {/if}
+    <label class="option">
+      {$_('options.loadingScreenHTML')}
+      <textarea bind:value={$options.loadingScreen.html} placeholder="<div>Загрузка...</div>" spellcheck="false"></textarea>
+    </label>
+    <p>{$_('options.loadingScreenHTMLHelp')}</p>
 
     <h3>{$_('options.controls')}</h3>
     <div class="group">
@@ -1085,6 +1098,9 @@
     name={result ? result.filename : null}
     url={result ? result.url : null}
     blob={result ? result.blob : null}
+    uniqueId={projectData.uniqueId}
+    projectName={projectData.title}
+    targetType={$options.target}
   />
 {:else if !$progress.visible}
   <Section caption>

@@ -1337,15 +1337,20 @@ cd "$(dirname "$0")"
         : ''}
     }
     .progress-bar-outer {
-      border: 1px solid currentColor;
+      width: 100%;
       height: 10px;
-      width: 200px;
+      background: #1b331b;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0.5rem 0;
       max-width: 200px;
     }
     .progress-bar-inner {
       height: 100%;
       width: 0;
-      background-color: currentColor;
+      background: linear-gradient(90deg, #7eaf7a, #c7f0b1);
+      border-radius: 10px;
+      transition: width 0.3s ease;
     }
     .loading-text, noscript {
       font-weight: normal;
@@ -1428,10 +1433,12 @@ cd "$(dirname "$0")"
   </div>
 
   <div id="loading" class="screen">
-    <noscript>Enable JavaScript</noscript>
+    ${this.options.loadingScreen.html
+      ? this.options.loadingScreen.html
+      : `<noscript>Enable JavaScript</noscript>
     ${this.options.loadingScreen.text ? `<h1 class="loading-text">${escapeXML(this.options.loadingScreen.text)}</h1>` : ''}
     ${this.options.loadingScreen.image && this.options.loadingScreen.imageMode === 'normal' ? `<div class="loading-image"><img src="${await Adapter.readAsURL(this.options.loadingScreen.image, 'loading-screen')}"></div>` : ''}
-    ${this.options.loadingScreen.progressBar ? '<div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>' : ''}
+    ${this.options.loadingScreen.progressBar ? '<div class="progress-bar-outer"><div class="progress-bar-inner" id="loading-inner"></div></div>' : ''}`}
   </div>
 
   <div id="error" class="screen" hidden>
@@ -1462,7 +1469,12 @@ cd "$(dirname "$0")"
       errorScreenStack.textContent = debug;
     };
     const setProgress = (progress) => {
-      if (loadingInner) loadingInner.style.width = progress * 100 + '%';
+      if (loadingInner) {
+        loadingInner.style.width = progress * 100 + '%';
+      }
+      if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
+        try { document.title = Math.round(progress * 100) + '%'; } catch (e) {}
+      }
     };
     const interpolate = (a, b, t) => a + t * (b - a);
 
@@ -1685,6 +1697,9 @@ cd "$(dirname "$0")"
       await scaffolding.loadProject(projectData);
       setProgress(1);
       loadingScreen.hidden = true;
+      if (${JSON.stringify(this.options.showLoadingProgressInTitle)}) {
+        try { document.title = ${JSON.stringify(this.options.app.windowTitle)}; } catch (e) {}
+      }
       if (${this.options.autoplay}) {
         scaffolding.start();
       } else {
@@ -1775,7 +1790,8 @@ Packager.usesUnsafeOptions = (options) => {
   const defaultOptions = Packager.DEFAULT_OPTIONS();
   const getUnsafeOptions = (options) => [
     options.custom,
-    options.cloudVariables.unsafeCloudBehaviors
+    options.cloudVariables.unsafeCloudBehaviors,
+    options.loadingScreen.html
   ];
   return JSON.stringify(getUnsafeOptions(defaultOptions)) !== JSON.stringify(getUnsafeOptions(options));
 };
@@ -1791,9 +1807,10 @@ Packager.DEFAULT_OPTIONS = () => ({
   stageWidth: 480,
   stageHeight: 360,
   resizeMode: 'preserve-ratio',
-  autoplay: false,
+  autoplay: true,
   username: 'player####',
   closeWhenStopped: false,
+  showLoadingProgressInTitle: false,
   projectId: '',
   custom: {
     css: '',
@@ -1808,7 +1825,8 @@ Packager.DEFAULT_OPTIONS = () => ({
     progressBar: true,
     text: '',
     imageMode: 'normal',
-    image: null
+    image: null,
+    html: ''
   },
   controls: {
     greenFlag: {

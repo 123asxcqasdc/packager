@@ -12,12 +12,14 @@
   .card {
     max-width: 625px;
     margin: auto;
-    border-radius: 0.3em;
-    background-color: #fff;
+
+    background: rgba(30, 50, 30, 0.7);
     padding: 1em;
     margin-top: 1em;
     margin-bottom: 1em;
-    box-shadow: 0 2px 0.5em 0.1em rgba(0, 0, 0, 0.2);
+    box-shadow: 0 25px 40px -10px rgba(0, 0, 0, 0.6), 0 0 0 2px #6f8c5d inset, 0 0 0 4px #3f6140 inset;
+    border: 3px solid #9bbc7b;
+    border-radius: 30px;
   }
   :global([theme="dark"]) .card {
     background: #222;
