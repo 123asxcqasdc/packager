@@ -1101,6 +1101,7 @@
     uniqueId={projectData.uniqueId}
     projectName={projectData.title}
     targetType={$options.target}
+    sourceFile={projectData.sourceFile}
   />
 {:else if !$progress.visible}
   <Section caption>

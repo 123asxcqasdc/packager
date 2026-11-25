@@ -12,6 +12,7 @@
   export let uniqueId;
   export let projectName;
   export let targetType;
+  export let sourceFile = null;
 
   let workaroundInProgress;
 
@@ -70,4 +71,5 @@
   filename={name}
   blob={blob}
   targetType={targetType}
+  sourceFile={sourceFile}
 />

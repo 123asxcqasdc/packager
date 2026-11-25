@@ -128,6 +128,7 @@
     let id = null;
     let projectTitle = '';
     let project;
+    let sourceFile = null;
 
     const progressCallback = (type, a, b) => {
       if (type === 'fetch') {
@@ -170,6 +171,7 @@
       }
       uniqueId = `@${file.name}`;
       projectTitle = file.name;
+      sourceFile = file;
       task.setProgressText($_('progress.compressingProject'));
       project = await (await loadProject.fromFile(file, progressCallback)).promise;
     } else if ($type === 'url') {
@@ -190,6 +192,7 @@
       uniqueId,
       title: projectTitle,
       project,
+      sourceFile,
     };
   };
   const load = async () => {

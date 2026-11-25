@@ -26,6 +26,7 @@
   export let filename;
   export let blob;
   export let targetType; // 'html' | 'zip'
+  export let sourceFile = null; // the original project file (.sb/.sb2/.sb3), if loaded from a file
 
   const savedMapping = getMapping(uniqueId);
   const defaultPath = projectName.replace(/\.[^/.]+$/, '') || 'packaged-project';
@@ -44,6 +45,7 @@
   let outputName = savedMapping && savedMapping.outputName ? savedMapping.outputName : 'index.html';
   let branch = savedMapping && savedMapping.branch ? savedMapping.branch : 'main';
   let customDomain = savedMapping && savedMapping.customDomain ? savedMapping.customDomain : '';
+  let keepSource = savedMapping ? !!savedMapping.keepSource : false;
   let uploadProgress = 0;
   let uploadMsg = '';
   let uploading = false;
@@ -65,6 +67,74 @@
     }
     return url;
   })();
+
+  // Name of the original project file that would be uploaded with "keepSource".
+  $: sourceFileName = (() => {
+    if (sourceFile) return sourceFile.name || 'project.sb3';
+    if (uniqueId && uniqueId.startsWith('#')) {
+      const id = uniqueId.substring(1);
+      return /^\d+$/.test(id) ? `project-${id}.sb3` : '';
+    }
+    if (uniqueId && uniqueId.startsWith('$')) {
+      try {
+        const url = new URL(uniqueId.substring(1));
+        const last = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '');
+        if (/\.(sb2|sb3)$/i.test(last)) return last;
+        const idMatch = url.pathname.match(/projects\/(\d+)/);
+        if (idMatch) return `project-${idMatch[1]}.sb3`;
+      } catch (e) {}
+    }
+    return '';
+  })();
+
+  const blobToBase64 = (data) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+    reader.readAsDataURL(data);
+  });
+
+  // Tries to obtain the original project file (.sb2/.sb3) for projects loaded
+  // from an ID or URL (when no source file was picked by the user).
+  const sourceFromUniqueId = async () => {
+    if (!uniqueId) return null;
+    if (uniqueId.startsWith('#')) {
+      const id = uniqueId.substring(1);
+      if (!/^\d+$/.test(id)) return null;
+      const res = await fetch(`https://scratch.mit.edu/projects/${id}/sb3`);
+      if (!res.ok) throw new Error(`Не удалось скачать исходный проект с Scratch (${id})`);
+      return { blob: await res.blob(), name: `project-${id}.sb3` };
+    }
+    if (uniqueId.startsWith('$')) {
+      let url;
+      try {
+        url = new URL(uniqueId.substring(1));
+      } catch (e) {
+        return null;
+      }
+      const last = decodeURIComponent(url.pathname.split('/').filter(Boolean).pop() || '');
+      if (/\.(sb2|sb3)$/i.test(last)) {
+        const res = await fetch(uniqueId.substring(1));
+        if (!res.ok) throw new Error('Не удалось скачать исходный файл по URL');
+        return { blob: await res.blob(), name: last };
+      }
+      const idMatch = url.pathname.match(/projects\/(\d+)/);
+      if (idMatch) {
+        const id = idMatch[1];
+        const res = await fetch(`https://scratch.mit.edu/projects/${id}/sb3`);
+        if (!res.ok) throw new Error(`Не удалось скачать исходный проект с Scratch (${id})`);
+        return { blob: await res.blob(), name: `project-${id}.sb3` };
+      }
+    }
+    return null;
+  };
+
+  const resolveSource = async () => {
+    if (sourceFile) {
+      return { blob: sourceFile, name: sourceFile.name || 'project.sb3' };
+    }
+    return await sourceFromUniqueId();
+  };
 
   const loginWithPat = async () => {
     error = '';
@@ -144,13 +214,7 @@
       if (targetType === 'html') {
         uploadMsg = 'Кодирую HTML...';
         uploadProgress = 10;
-        const reader = new FileReader();
-        const dataUrl = await new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-        const base64 = dataUrl.split(',')[1];
+        const base64 = await blobToBase64(blob);
         uploadMsg = 'Проверяю существующий файл...';
         uploadProgress = 40;
         const sha = await getFileSha(token, owner, repo, normalizedPath + outName, br);
@@ -183,14 +247,26 @@
           uploadProgress = 10 + Math.round(((i + 1) / total) * 70);
         }
       }
+      if (keepSource) {
+        uploadMsg = 'Беру исходный файл проекта...';
+        uploadProgress = 90;
+        const source = await resolveSource();
+        if (!source) throw new Error('Не удалось получить исходный файл проекта (.sb2/.sb3)');
+        uploadMsg = `Загружаю ${source.name}...`;
+        const srcBase64 = await blobToBase64(source.blob);
+        const srcPath = normalizedPath + source.name.replace(/^\/+/, '');
+        const srcSha = await getFileSha(token, owner, repo, srcPath, br);
+        await putFile(token, owner, repo, srcPath, srcBase64, `Add source project file ${source.name}`, srcSha, br);
+        uploadProgress = 95;
+      }
       uploadMsg = 'Включаю GitHub Pages...';
-      uploadProgress = 95;
+      uploadProgress = 98;
       await ensureGhPages(token, owner, repo, br);
       const info = await getPagesInfo(token, owner, repo);
       customDomain = (info && info.cname) ? info.cname : '';
       let finalUrl = getPagesUrl(owner, repo, p, customDomain);
       if (targetType === 'html' && outName && outName !== 'index.html') finalUrl += outName;
-      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: br, customDomain, baseUrl: finalUrl });
+      storeMapping(uniqueId, { owner, repo, path: p, outputName: outName, branch: br, customDomain, baseUrl: finalUrl, keepSource });
       pagesUrl = finalUrl;
       uploadMsg = 'Готово';
       uploadProgress = 100;
@@ -258,7 +334,17 @@
         </label>
         <br />
       {/if}
+      {#if sourceFileName}
+        <label>
+          <input type="checkbox" bind:checked={keepSource}>
+          Сохранить исходный файл вместе с упакованным
+        </label>
+        <br />
+      {/if}
       <p>Будет залито: <code>{branch || 'main'}:{path ? path + '/' : ''}{targetType === 'html' ? (outputName || 'index.html') : filename}</code></p>
+      {#if keepSource && sourceFileName}
+        <p>И исходный файл: <code>{branch || 'main'}:{path ? path + '/' : ''}{sourceFileName}</code></p>
+      {/if}
       {#if previewUrl}
         <p>Ссылка: <a href={previewUrl} target="_blank" rel="noopener">{previewUrl}</a></p>
       {/if}
